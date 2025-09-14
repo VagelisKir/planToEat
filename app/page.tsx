@@ -1,13 +1,7 @@
 import LoginForm from "@/components/login";
-import { auth0 } from "@/lib/auth0";
 import { ChefHat } from "lucide-react";
 
 export default async function LoginPage() {
-  const session = await auth0.getSession();
-
-  if (session) {
-    const email = session.user.email;
-  }
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">

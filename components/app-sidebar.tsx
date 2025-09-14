@@ -18,7 +18,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Separator } from "./ui/separator";
 
 // Menu items.
@@ -30,22 +29,22 @@ const items = [
   },
   {
     title: "Add a recipe",
-    url: "#",
+    url: "/dashboard/addRecipe",
     icon: ChefHat,
   },
   {
     title: "My recipes",
-    url: "#",
+    url: "/dashboard/myRecipes",
     icon: CookingPot,
   },
   {
     title: "Plan for the week",
-    url: "#",
+    url: "/dashboard/planForWeek",
     icon: Calendar,
   },
   {
     title: "Search recipe ideas",
-    url: "#",
+    url: "/dashboard/searchRecipeIdeas",
     icon: Search,
   },
 ];
@@ -53,7 +52,7 @@ const items = [
 const bottomItems = [
   {
     title: "Profile",
-    url: "#",
+    url: "/dashboard/profile",
     icon: UserRound,
   },
   {
@@ -70,16 +69,15 @@ export function AppSidebar() {
         {/* top menu */}
         <SidebarGroup>
           <SidebarGroupLabel className="flex items-center gap-2">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src="/logo.png" alt="PlanToEat logo" />
-              <AvatarFallback>PT</AvatarFallback>
-            </Avatar>
-            <span className="text-base font-semibold">PlanToEat</span>
+            <div className="flex items-center gap-1 px-2">
+              <ChefHat />
+              <span className="text-base font-semibold">PlanToEat</span>
+            </div>
           </SidebarGroupLabel>
-          <div className="py-6">
+          <div className="py-1 px-3 border-b">
             <Separator />
             <SidebarGroupContent>
-              <SidebarMenu className="flex flex-col gap-4">
+              <SidebarMenu className="flex flex-col gap-1">
                 {items.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
