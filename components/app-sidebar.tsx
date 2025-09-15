@@ -24,27 +24,27 @@ import { Separator } from "./ui/separator";
 const items = [
   {
     title: "Latest news",
-    url: "#",
+    url: "/latestNews",
     icon: Newspaper,
   },
   {
     title: "Add a recipe",
-    url: "/dashboard/addRecipe",
+    url: "/addRecipe",
     icon: ChefHat,
   },
   {
     title: "My recipes",
-    url: "/dashboard/myRecipes",
+    url: "/myRecipes",
     icon: CookingPot,
   },
   {
     title: "Plan for the week",
-    url: "/dashboard/planForWeek",
+    url: "/calendar",
     icon: Calendar,
   },
   {
     title: "Search recipe ideas",
-    url: "/dashboard/searchRecipeIdeas",
+    url: "/search",
     icon: Search,
   },
 ];

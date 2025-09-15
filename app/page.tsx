@@ -1,7 +1,28 @@
 import LoginForm from "@/components/login";
+import { auth0 } from "@/lib/auth0";
+import prisma from "@/prisma/db";
 import { ChefHat } from "lucide-react";
+import addUserToDb from "./(dashboard)/actions";
+import { redirect } from "next/navigation";
 
 export default async function LoginPage() {
+  const session = await auth0.getSession();
+
+  if (session) {
+    const email = session.user?.email;
+    if (!email) {
+      redirect("/auth/login");
+    }
+    console.log({ session });
+
+    await prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: { email },
+    });
+
+    redirect("/addRecipe");
+  }
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
