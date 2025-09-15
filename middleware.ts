@@ -7,6 +7,12 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/addRecipe/:path*",
+    "/calendar/:path*",
+    "/myRecipes/:path*",
+    "/profile/:path*",
+    "/search/:path*",
+    "/latestNews/:path*",
     /*
      * Match all request paths except for the ones starting with:
      * - _next/static (static files)

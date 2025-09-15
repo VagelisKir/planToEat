@@ -6,12 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { auth0 } from "@/lib/auth0";
 
 export default async function LoginForm() {
-  const session = await auth0.getSession();
-  console.log({ session });
-
   return (
     <Card className="w-full">
       <CardHeader className="space-y-1">
