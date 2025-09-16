@@ -3,6 +3,7 @@
 import prisma from "@/prisma/db"
 
 export async function addRecipeToDB(data: {
+    user: { email: string }
   title: string
   description?: string
   imageUrl?: string
