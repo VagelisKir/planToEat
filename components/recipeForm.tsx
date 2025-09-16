@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { addRecipeToDB } from "@/app/(dashboard)/addRecipe/actions";
 import { useUser } from "@auth0/nextjs-auth0";
+import { toast } from "sonner";
 
 type RecipeFormData = {
   title: string;
@@ -80,13 +81,16 @@ export function RecipeForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      toast.error("Please fix the highlighted fields.");
+      return;
+    }
 
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
-      await addRecipeToDB({
+      const actionPromise = addRecipeToDB({
         user: { email: user?.email || "unknown" },
         title: formData.title,
         description: formData.description,
@@ -103,6 +107,12 @@ export function RecipeForm() {
         steps: formData.instructions
           .split("\n")
           .filter((step) => step.trim() !== ""),
+      });
+
+      await toast.promise(actionPromise, {
+        loading: "Saving recipe…",
+        success: "Recipe saved!",
+        error: "Failed to save recipe.",
       });
 
       setSubmitSuccess(true);
@@ -125,26 +135,6 @@ export function RecipeForm() {
       setIsSubmitting(false);
     }
   };
-
-  if (submitSuccess) {
-    return (
-      <div className="max-w-4xl mx-auto p-6">
-        <Card className="text-center">
-          <CardContent className="pt-6">
-            <div className="text-green-600 text-lg font-semibold mb-2">
-              ✅ Recipe saved successfully!
-            </div>
-            <p className="text-muted-foreground mb-4">
-              Your recipe has been added to the database.
-            </p>
-            <Button onClick={() => setSubmitSuccess(false)}>
-              Add Another Recipe
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -194,7 +184,7 @@ export function RecipeForm() {
                 }
               />
               <p className="text-sm text-muted-foreground">
-                Optional: Add a brief description of your recipe
+                Add a brief description of your recipe
               </p>
             </div>
 
@@ -296,9 +286,7 @@ export function RecipeForm() {
               />
               <div className="space-y-1 leading-none">
                 <Label htmlFor="isPublic">Make this recipe public</Label>
-                <p className="text-sm text-muted-foreground">
-                  Allow other users to view and save this recipe
-                </p>
+                <p className="text-sm text-muted-foreground"></p>
               </div>
             </div>
           </CardContent>
@@ -313,20 +301,19 @@ export function RecipeForm() {
               <Label htmlFor="ingredientsText">Ingredients</Label>
               <Textarea
                 id="ingredientsText"
-                placeholder="List each ingredient on a new line with quantities, for example:
-1 cup flour
-2 eggs
-1/2 cup sugar
-1 tsp vanilla extract"
+                placeholder={[
+                  "List each ingredient on a new line with quantities, for example:",
+                  "1 cup flour",
+                  "2 eggs",
+                  "1/2 cup sugar",
+                  "1 tsp vanilla extract",
+                ].join("\n")}
                 className="min-h-[120px]"
                 value={formData.ingredientsText}
                 onChange={(e) =>
                   handleInputChange("ingredientsText", e.target.value)
                 }
               />
-              <p className="text-sm text-muted-foreground">
-                List each ingredient on a new line with quantities
-              </p>
               {errors.ingredientsText && (
                 <p className="text-sm text-destructive">
                   {errors.ingredientsText}
@@ -338,20 +325,20 @@ export function RecipeForm() {
               <Label htmlFor="instructions">Instructions</Label>
               <Textarea
                 id="instructions"
-                placeholder="Write step-by-step cooking instructions, for example:
-1. Preheat oven to 350°F
-2. Mix dry ingredients in a bowl
-3. Add wet ingredients and stir until combined
-4. Bake for 25-30 minutes"
+                placeholder={[
+                  "Write step-by-step cooking instructions, for example:",
+                  "1. Preheat oven to 350°F",
+                  "2. Mix dry ingredients in a bowl",
+                  "3. Add wet ingredients and stir until combined",
+                  "4. Bake for 25-30 minutes",
+                ].join("\n")}
                 className="min-h-[150px]"
                 value={formData.instructions}
                 onChange={(e) =>
                   handleInputChange("instructions", e.target.value)
                 }
               />
-              <p className="text-sm text-muted-foreground">
-                Write step-by-step cooking instructions
-              </p>
+              <p className="text-sm text-muted-foreground"></p>
               {errors.instructions && (
                 <p className="text-sm text-destructive">
                   {errors.instructions}
