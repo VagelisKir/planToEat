@@ -15,19 +15,6 @@ datasource db {
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
-enum Unit {
-  GRAM
-  KILOGRAM
-  MILLILITER
-  LITER
-  TEASPOON
-  TABLESPOON
-  CUP
-  PIECE
-  SLICE
-  PINCH
-}
-
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -39,54 +26,23 @@ model User {
 }
 
 model Recipe {
-  id          String             @id @default(cuid())
-  title       String
-  description String?
-  servings    Int                @default(2)
-  prepMin     Int?
-  cookMin     Int?
-  imageUrl    String?
-  sourceUrl   String?
-  isPublic    Boolean            @default(false)
-  userId      String
-  user        User               @relation(fields: [userId], references: [id])
-  ingredients RecipeIngredient[]
-  steps       Step[]
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  title           String
+  description     String?
+  servings        Int      @default(2)
+  prepMin         Int?
+  cookMin         Int?
+  imageUrl        String?
+  sourceUrl       String?
+  instructions    String?
+  isPublic        Boolean  @default(false)
+  ingredientsText String?
+  steps           String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([userId])
-}
-
-model Ingredient {
-  id               String             @id @default(cuid())
-  name             String             @unique
-  aisle            String?
-  allergens        String[]
-  canonicalUnit    Unit?
-  gramsPerUnit     Decimal?           @db.Decimal(12, 3)
-  RecipeIngredient RecipeIngredient[]
-}
-
-model RecipeIngredient {
-  id           String     @id @default(cuid())
-  recipeId     String
-  ingredientId String
-  quantity     Decimal    @db.Decimal(10, 2)
-  unit         Unit
-  note         String?
-  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
-
-  @@unique([recipeId, ingredientId, note])
-}
-
-model Step {
-  id          String @id @default(cuid())
-  recipeId    String
-  order       Int
-  instruction String
-  recipe      Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-
-  @@index([recipeId, order])
 }

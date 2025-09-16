@@ -18,7 +18,7 @@ export default async function LoginForm() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-3">
-          <Button className="w-full bg-primary hover:bg-primary/90">
+          <Button className="w-full bg-primary hover">
             <a href="/auth/login">Log In</a>
           </Button>
 
