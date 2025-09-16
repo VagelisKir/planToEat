@@ -2,7 +2,6 @@ import LoginForm from "@/components/login";
 import { auth0 } from "@/lib/auth0";
 import prisma from "@/prisma/db";
 import { ChefHat } from "lucide-react";
-import addUserToDb from "./(dashboard)/actions";
 import { redirect } from "next/navigation";
 
 export default async function LoginPage() {
@@ -42,7 +41,7 @@ export default async function LoginPage() {
 
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
-            © 2024 PlanToEat Pro. All rights reserved.
+            © 2025 PlanToEat Pro. All rights reserved.
           </p>
         </div>
       </div>

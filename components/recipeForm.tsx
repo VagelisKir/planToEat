@@ -3,400 +3,371 @@
 import type React from "react";
 
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { addRecipeToDB } from "@/app/(dashboard)/addRecipe/actions";
+import { useUser } from "@auth0/nextjs-auth0";
 
-type Ingredient = {
-  name: string;
-  quantity: string;
-  unit: string;
-  note: string;
-};
-
-type Step = {
-  instruction: string;
-};
-
-type Recipe = {
+type RecipeFormData = {
   title: string;
   description: string;
-  servings: string;
-  prepMin: string;
-  cookMin: string;
+  servings: number;
+  prepMin: number;
+  cookMin: number;
   imageUrl: string;
   sourceUrl: string;
   isPublic: boolean;
-  ingredients: Ingredient[];
-  steps: Step[];
+  ingredientsText: string;
+  instructions: string;
 };
 
-export function AddRecipeForm() {
-  const [recipe, setRecipe] = useState<Recipe>({
+export function RecipeForm() {
+  const { user, isLoading } = useUser();
+
+  const [formData, setFormData] = useState<RecipeFormData>({
     title: "",
     description: "",
-    servings: "2",
-    prepMin: "",
-    cookMin: "",
+    servings: 2,
+    prepMin: 0,
+    cookMin: 0,
     imageUrl: "",
     sourceUrl: "",
     isPublic: false,
-    ingredients: [{ name: "", quantity: "", unit: "CUP", note: "" }],
-    steps: [{ instruction: "" }],
+    ingredientsText: "",
+    instructions: "",
   });
 
-  const unitOptions = [
-    { value: "GRAM", label: "Gram" },
-    { value: "KILOGRAM", label: "Kilogram" },
-    { value: "MILLILITER", label: "Milliliter" },
-    { value: "LITER", label: "Liter" },
-    { value: "TEASPOON", label: "Teaspoon" },
-    { value: "TABLESPOON", label: "Tablespoon" },
-    { value: "CUP", label: "Cup" },
-    { value: "PIECE", label: "Piece" },
-    { value: "SLICE", label: "Slice" },
-    { value: "PINCH", label: "Pinch" },
-  ];
+  const [errors, setErrors] = useState<Partial<RecipeFormData>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const updateRecipe = (
-    field: keyof Recipe,
-    value: string | boolean | Ingredient[] | Step[]
+  const handleInputChange = (
+    field: keyof RecipeFormData,
+    value: string | number | boolean
   ) => {
-    setRecipe((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const updateIngredient = (
-    index: number,
-    field: keyof Ingredient,
-    value: string
-  ) => {
-    const newIngredients = [...recipe.ingredients];
-    newIngredients[index] = { ...newIngredients[index], [field]: value };
-    setRecipe((prev) => ({ ...prev, ingredients: newIngredients }));
-  };
-
-  const addIngredient = () => {
-    setRecipe((prev) => ({
-      ...prev,
-      ingredients: [
-        ...prev.ingredients,
-        { name: "", quantity: "", unit: "CUP", note: "" },
-      ],
-    }));
-  };
-
-  const removeIngredient = (index: number) => {
-    if (recipe.ingredients.length > 1) {
-      setRecipe((prev) => ({
-        ...prev,
-        ingredients: prev.ingredients.filter((_, i) => i !== index),
-      }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
+    if (submitSuccess) setSubmitSuccess(false);
+    if (submitError) setSubmitError(null);
   };
 
-  const updateStep = (index: number, value: string) => {
-    const newSteps = [...recipe.steps];
-    newSteps[index] = { instruction: value };
-    setRecipe((prev) => ({ ...prev, steps: newSteps }));
-  };
+  const validateForm = (): boolean => {
+    const newErrors: Partial<RecipeFormData> = {};
 
-  const addStep = () => {
-    setRecipe((prev) => ({
-      ...prev,
-      steps: [...prev.steps, { instruction: "" }],
-    }));
-  };
-
-  const removeStep = (index: number) => {
-    if (recipe.steps.length > 1) {
-      setRecipe((prev) => ({
-        ...prev,
-        steps: prev.steps.filter((_, i) => i !== index),
-      }));
+    if (!formData.title.trim()) {
+      newErrors.title = "Recipe title is required";
     }
+    if (!formData.ingredientsText.trim()) {
+      newErrors.ingredientsText = "Please list the ingredients";
+    }
+    if (!formData.instructions.trim()) {
+      newErrors.instructions = "Please provide cooking instructions";
+    }
+    if (formData.servings < 1) {
+      newErrors.servings = 1;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(recipe);
-    // TODO: Implement recipe creation logic
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      await addRecipeToDB({
+        user: { email: user?.email || "unknown" },
+        title: formData.title,
+        description: formData.description,
+        imageUrl: formData.imageUrl,
+        sourceUrl: formData.sourceUrl,
+        prepMin: formData.prepMin,
+        cookMin: formData.cookMin,
+        servings: formData.servings,
+        isPublic: formData.isPublic,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ingredientsText: formData.ingredientsText,
+        instructions: formData.instructions,
+        steps: formData.instructions
+          .split("\n")
+          .filter((step) => step.trim() !== ""),
+      });
+
+      setSubmitSuccess(true);
+      setFormData({
+        title: "",
+        description: "",
+        servings: 2,
+        prepMin: 0,
+        cookMin: 0,
+        imageUrl: "",
+        sourceUrl: "",
+        isPublic: false,
+        ingredientsText: "",
+        instructions: "",
+      });
+    } catch (error) {
+      console.error("Failed to save recipe:", error);
+      setSubmitError("Failed to save recipe. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (submitSuccess) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-green-600 text-lg font-semibold mb-2">
+              ✅ Recipe saved successfully!
+            </div>
+            <p className="text-muted-foreground mb-4">
+              Your recipe has been added to the database.
+            </p>
+            <Button onClick={() => setSubmitSuccess(false)}>
+              Add Another Recipe
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold">Add New Recipe</h1>
+        <h1 className="text-3xl font-bold text-balance">Add New Recipe</h1>
         <p className="text-muted-foreground mt-2">
           Create and share your favorite recipes
         </p>
       </div>
 
+      {submitError && (
+        <Card className="mb-6 border-destructive">
+          <CardContent className="pt-6">
+            <div className="text-destructive font-semibold">{submitError}</div>
+          </CardContent>
+        </Card>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left Column - Basic Recipe Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recipe Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="title" className="text-sm font-medium">
-                  Recipe Title
-                </label>
-                <Input
-                  id="title"
-                  placeholder="Enter recipe title"
-                  value={recipe.title}
-                  onChange={(e) => updateRecipe("title", e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="description" className="text-sm font-medium">
-                  Description
-                </label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe your recipe..."
-                  className="min-h-[80px]"
-                  value={recipe.description}
-                  onChange={(e) => updateRecipe("description", e.target.value)}
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-2">
-                  <label htmlFor="servings" className="text-sm font-medium">
-                    Servings
-                  </label>
-                  <Input
-                    id="servings"
-                    type="number"
-                    min="1"
-                    placeholder="2"
-                    value={recipe.servings}
-                    onChange={(e) => updateRecipe("servings", e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="prepMin" className="text-sm font-medium">
-                    Prep (min)
-                  </label>
-                  <Input
-                    id="prepMin"
-                    type="number"
-                    min="0"
-                    placeholder="15"
-                    value={recipe.prepMin}
-                    onChange={(e) => updateRecipe("prepMin", e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="cookMin" className="text-sm font-medium">
-                    Cook (min)
-                  </label>
-                  <Input
-                    id="cookMin"
-                    type="number"
-                    min="0"
-                    placeholder="30"
-                    value={recipe.cookMin}
-                    onChange={(e) => updateRecipe("cookMin", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="imageUrl" className="text-sm font-medium">
-                    Image URL
-                  </label>
-                  <Input
-                    id="imageUrl"
-                    placeholder="https://example.com/image.jpg"
-                    value={recipe.imageUrl}
-                    onChange={(e) => updateRecipe("imageUrl", e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="sourceUrl" className="text-sm font-medium">
-                    Source URL
-                  </label>
-                  <Input
-                    id="sourceUrl"
-                    placeholder="https://example.com/recipe"
-                    value={recipe.sourceUrl}
-                    onChange={(e) => updateRecipe("sourceUrl", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg border p-3">
-                <div className="space-y-0.5">
-                  <label htmlFor="isPublic" className="text-sm font-medium">
-                    Public Recipe
-                  </label>
-                  <p className="text-xs text-muted-foreground">
-                    Make visible to other users
-                  </p>
-                </div>
-                <input
-                  id="isPublic"
-                  type="checkbox"
-                  checked={recipe.isPublic}
-                  onChange={(e) => updateRecipe("isPublic", e.target.checked)}
-                  className="h-4 w-4"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Right Column - Ingredients */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Ingredients</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {recipe.ingredients.map((ingredient, index) => (
-                <div key={index} className="space-y-2 p-3 border rounded-lg">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      placeholder="Ingredient name"
-                      value={ingredient.name}
-                      onChange={(e) =>
-                        updateIngredient(index, "name", e.target.value)
-                      }
-                    />
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="2"
-                        className="w-20"
-                        value={ingredient.quantity}
-                        onChange={(e) =>
-                          updateIngredient(index, "quantity", e.target.value)
-                        }
-                      />
-                      <Select
-                        value={ingredient.unit}
-                        onValueChange={(value) =>
-                          updateIngredient(index, "unit", value)
-                        }
-                      >
-                        <SelectTrigger className="w-24">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {unitOptions.map((unit) => (
-                            <SelectItem key={unit.value} value={unit.value}>
-                              {unit.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Note (optional)"
-                      className="flex-1"
-                      value={ingredient.note}
-                      onChange={(e) =>
-                        updateIngredient(index, "note", e.target.value)
-                      }
-                    />
-                    {recipe.ingredients.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeIngredient(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addIngredient}
-                className="w-full bg-transparent"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Ingredient
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Full Width - Instructions Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Instructions</CardTitle>
+            <CardTitle>Recipe Details</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-4">
-              {recipe.steps.map((step, index) => (
-                <div
-                  key={index}
-                  className="flex gap-3 items-start p-3 border rounded-lg"
-                >
-                  <div className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-medium">
-                    {index + 1}
-                  </div>
-                  <div className="flex-1">
-                    <Textarea
-                      placeholder="Describe this step..."
-                      className="min-h-[60px] text-sm"
-                      value={step.instruction}
-                      onChange={(e) => updateStep(index, e.target.value)}
-                    />
-                  </div>
-                  {recipe.steps.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeStep(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="title">Recipe Title</Label>
+              <Input
+                id="title"
+                placeholder="Enter recipe title"
+                value={formData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+              />
+              {errors.title && (
+                <p className="text-sm text-destructive">{errors.title}</p>
+              )}
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={addStep}
-              className="w-full bg-transparent"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Step
-            </Button>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Describe your recipe..."
+                className="min-h-[80px]"
+                value={formData.description}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
+              />
+              <p className="text-sm text-muted-foreground">
+                Optional: Add a brief description of your recipe
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="servings">Servings</Label>
+                <Input
+                  id="servings"
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={formData.servings}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "servings",
+                      Number.parseInt(e.target.value) || 1
+                    )
+                  }
+                />
+                {errors.servings && (
+                  <p className="text-sm text-destructive">{errors.servings}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="prepMin">Prep Time (minutes)</Label>
+                <Input
+                  id="prepMin"
+                  type="number"
+                  min="0"
+                  placeholder="15"
+                  value={formData.prepMin || ""}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "prepMin",
+                      Number.parseInt(e.target.value) || 0
+                    )
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cookMin">Cook Time (minutes)</Label>
+                <Input
+                  id="cookMin"
+                  type="number"
+                  min="0"
+                  placeholder="30"
+                  value={formData.cookMin || ""}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "cookMin",
+                      Number.parseInt(e.target.value) || 0
+                    )
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="imageUrl">Image URL</Label>
+                <Input
+                  id="imageUrl"
+                  placeholder="https://example.com/image.jpg"
+                  value={formData.imageUrl}
+                  onChange={(e) =>
+                    handleInputChange("imageUrl", e.target.value)
+                  }
+                />
+                <p className="text-sm text-muted-foreground">
+                  Optional: Add a photo of your recipe
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="sourceUrl">Source URL</Label>
+                <Input
+                  id="sourceUrl"
+                  placeholder="https://example.com/recipe"
+                  value={formData.sourceUrl}
+                  onChange={(e) =>
+                    handleInputChange("sourceUrl", e.target.value)
+                  }
+                />
+                <p className="text-sm text-muted-foreground">
+                  Optional: Link to original recipe source
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+              <Checkbox
+                id="isPublic"
+                checked={formData.isPublic}
+                onCheckedChange={(checked) =>
+                  handleInputChange("isPublic", checked === true)
+                }
+              />
+              <div className="space-y-1 leading-none">
+                <Label htmlFor="isPublic">Make this recipe public</Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow other users to view and save this recipe
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <div className="flex justify-end space-x-4 pt-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Ingredients & Instructions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="ingredientsText">Ingredients</Label>
+              <Textarea
+                id="ingredientsText"
+                placeholder="List each ingredient on a new line with quantities, for example:
+1 cup flour
+2 eggs
+1/2 cup sugar
+1 tsp vanilla extract"
+                className="min-h-[120px]"
+                value={formData.ingredientsText}
+                onChange={(e) =>
+                  handleInputChange("ingredientsText", e.target.value)
+                }
+              />
+              <p className="text-sm text-muted-foreground">
+                List each ingredient on a new line with quantities
+              </p>
+              {errors.ingredientsText && (
+                <p className="text-sm text-destructive">
+                  {errors.ingredientsText}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="instructions">Instructions</Label>
+              <Textarea
+                id="instructions"
+                placeholder="Write step-by-step cooking instructions, for example:
+1. Preheat oven to 350°F
+2. Mix dry ingredients in a bowl
+3. Add wet ingredients and stir until combined
+4. Bake for 25-30 minutes"
+                className="min-h-[150px]"
+                value={formData.instructions}
+                onChange={(e) =>
+                  handleInputChange("instructions", e.target.value)
+                }
+              />
+              <p className="text-sm text-muted-foreground">
+                Write step-by-step cooking instructions
+              </p>
+              {errors.instructions && (
+                <p className="text-sm text-destructive">
+                  {errors.instructions}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end space-x-4">
           <Button type="button" variant="outline">
             Cancel
           </Button>
-          <Button type="submit">Create Recipe</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Create Recipe"}
+          </Button>
         </div>
       </form>
     </div>
