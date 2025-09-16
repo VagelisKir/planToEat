@@ -12,10 +12,9 @@ async function main() {
   });
   const recipes = [
     {
-      title: "Sweet Potato & Carrot Purée (6+ months)",
+      title: "Sweet Potato & Carrot Purée",
       description:
-        "Smooth, naturally sweet purée rich in beta-carotene. Thin with water, formula, or breast milk as needed.",
-      servings: 2,
+        "Smooth, naturally sweet purée rich in beta-carotene.",
       prepMin: 10,
       cookMin: 15,
       imageUrl: null,
@@ -36,7 +35,7 @@ async function main() {
       ],
     },
     {
-      title: "Apple–Pear Cinnamon Purée (6+ months)",
+      title: "Apple–Pear Cinnamon Purée",
       description:
         "Gentle fruit purée with a hint of cinnamon. No added sugar.",
       servings: 3,
@@ -61,7 +60,7 @@ async function main() {
       ],
     },
     {
-      title: "Avocado & Banana Mash (No-Cook, 6+ months)",
+      title: "Avocado & Banana Mash",
       description:
         "Creamy healthy fats and natural sweetness—perfect quick meal or snack.",
       servings: 2,
@@ -85,9 +84,9 @@ async function main() {
       ],
     },
     {
-      title: "Red Lentil & Veggie Purée (8+ months)",
+      title: "Red Lentil & Veggie Purée",
       description:
-        "Iron-rich lentils with mild vegetables. Blend very smooth for younger babies.",
+        "Iron-rich lentils with mild vegetables.",
       servings: 3,
       prepMin: 10,
       cookMin: 20,
@@ -110,7 +109,7 @@ async function main() {
       ],
     },
     {
-      title: "Creamy Oatmeal with Banana (6–8+ months)",
+      title: "Creamy Oatmeal with Banana",
       description:
         "Soft oats with mashed banana. Use milk or water you typically feed.",
       servings: 2,
