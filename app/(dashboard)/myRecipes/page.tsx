@@ -23,7 +23,7 @@ export default async function MyRecipes() {
     where: { userId: user.id },
   });
   return (
-    <main className="container mx-auto py-8">
+    <main className="container mx-auto py-8 px-4 md:px-6 lg:px-8 ">
       <div className="space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-balance">Baby Food Recipes</h1>
