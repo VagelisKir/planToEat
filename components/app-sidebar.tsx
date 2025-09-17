@@ -52,7 +52,7 @@ const items = [
 const bottomItems = [
   {
     title: "Profile",
-    url: "/dashboard/profile",
+    url: "/profile",
     icon: UserRound,
   },
   {
