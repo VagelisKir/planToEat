@@ -11,9 +11,14 @@ import {
   TableRow,
 } from "./ui/table";
 import { Badge } from "./ui/badge";
-import { Recipe } from "@/lib/generated/prisma/wasm";
+import type { Recipe } from "@/lib/generated/prisma/wasm";
+import { redirect } from "next/navigation";
 
 export function RecipesTable({ recipes }: { recipes: Recipe[] }) {
+  const handleRecipeClick = (recipeId: string) => {
+    redirect(`/myRecipes/${recipeId}`);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -51,7 +56,11 @@ export function RecipesTable({ recipes }: { recipes: Recipe[] }) {
                 const age = ageMatch ? ageMatch[1] : "6+ months";
 
                 return (
-                  <TableRow key={index}>
+                  <TableRow
+                    key={index}
+                    onClick={() => handleRecipeClick(recipe.id)}
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  >
                     <TableCell className="font-medium">
                       <div className="space-y-1">
                         <div className="font-semibold text-sm leading-tight">

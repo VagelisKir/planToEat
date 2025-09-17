@@ -13,6 +13,7 @@ export const config = {
     "/profile/:path*",
     "/search/:path*",
     "/latestNews/:path*",
+    "/myRecipes/:path*",
     /*
      * Match all request paths except for the ones starting with:
      * - _next/static (static files)
